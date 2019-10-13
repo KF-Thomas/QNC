@@ -1,4 +1,4 @@
-% th_spgpe_spectral
+import_h5(th_spgpe_spectral,'')
 figure(1001);
 hold on
 plot(t_1(12:end)-t_1(12),herm_dens_2(12:end,1))
