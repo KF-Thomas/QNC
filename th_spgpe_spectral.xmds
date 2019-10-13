@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+	<name>th_spgpe_spectral</name>
+	<author></author>
+	<description>
+		
+	</description>
+
+	<features>
+		<auto_vectorise />
+		<benchmark />
+		<bing />
+		<halt_non_finite />
+		<validation kind="run-time"/>
+		<globals>
+			<![CDATA[
+			real R_tilde;
+			real rho0_tilde;
+			real t_lim;
+			real t_lim_gs;
+			real kth; 
+			real sgT;
+			real mu;
+			]]>
+		</globals>
+		<arguments>
+			<argument name="chi" type="real" default_value="0.0786"/>
+			<argument name="omega_bar" type="real" default_value="0.0057"/>
+			<argument name="k0" type="real" default_value="7.0"/>
+			<argument name="tl" type="real" default_value="1.0"/>
+			<![CDATA[
+			R_tilde = sqrt(2.0)*1/(pow(chi,1.0/3.0)*omega_bar);
+			rho0_tilde = pow(chi,-2.0/3.0);
+			kth = 0.17;
+			t_lim = tl*2*M_PI/omega_bar;
+			t_lim_gs = log(5)/(omega_bar*1.0);
+			sgT = sqrt(2.0* kth);
+			mu=rho0_tilde;	
+			]]>
+		</arguments>
+	</features>
+
+	<geometry>
+		<propagation_dimension> t </propagation_dimension>
+		<transverse_dimensions>
+			<dimension name="x" lattice="1502"  spectral_lattice="1502" length_scale="sqrt(1/(omega_bar))" transform="hermite-gauss" />
+		</transverse_dimensions>
+	</geometry>
+
+	<driver name="mpi-multi-path" paths="6" />
+
+	<vector name="wavefunction" initial_basis="x" type="complex">
+		<components> psi </components>
+		<initialisation kind="hdf5">
+			<filename> psi_gs.h5 </filename>
+		</initialisation>
+	</vector>
+	
+    <computed_vector name="pos_space_terms" dimensions="x" type="complex">
+      <components>
+		  U
+      </components>
+      <evaluation>
+        <dependencies basis="x_4f">wavefunction</dependencies>
+        <![CDATA[
+          U = mod2(psi)*psi;
+        ]]>
+      </evaluation>
+    </computed_vector>
+
+	<noise_vector name="driving_noise" dimensions="x" initial_basis="kx" kind="wiener" type="complex" method="dsfmt">
+		<components> dW </components>
+	</noise_vector>
+
+	<sequence>
+
+		<integrate algorithm="SI" interval="t_lim_gs" steps="7000" tolerance="1e-4">
+			<samples>10 10 10</samples>
+			<operators>
+				<operator kind="ip" type="complex">
+					<operator_names>L_st</operator_names>
+					<![CDATA[
+					L_st = -(nx+0.5)*omega_bar*(i+kth);
+					]]>
+				</operator>
+				<integration_vectors>wavefunction</integration_vectors>
+				<dependencies>driving_noise pos_space_terms</dependencies>
+				<![CDATA[
+				dpsi_dt = L_st[psi]-(i+kth)*U+kth*mu*psi+sgT*dW;
+				]]>
+			</operators>
+		</integrate>
+		
+		<breakpoint filename= "psi_gs.xsil">
+			<dependencies basis="x">wavefunction</dependencies>
+		</breakpoint>
+
+	    <filter>
+	        <dependencies>wavefunction</dependencies>
+	      <![CDATA[
+	        psi *= cos(2.0*k0*x)*sqrt(2);
+	      ]]>
+	    </filter>
+
+		<integrate algorithm="ARK89" tolerance="1.0e-3" interval="t_lim">
+			<samples> 2500 2500 2500 </samples>
+			<operators>
+				<operator kind="ip" type="imaginary">
+					<operator_names> L </operator_names>
+					<![CDATA[
+					L = -(nx+0.5)*omega_bar*i;
+					]]>
+				</operator>
+				<integration_vectors> wavefunction </integration_vectors >
+				<dependencies> pos_space_terms </dependencies >
+				<![CDATA[
+				dpsi_dt = L[psi]-i*U;
+				]]>
+			</operators>
+		</integrate>
+
+	</sequence>
+  
+	<output>
+		<sampling_group basis="x" initial_sample="yes">
+			<moments> pos_dens pos_phase </moments>
+			<dependencies>wavefunction</dependencies>
+			<![CDATA[
+			pos_dens = mod2(psi);
+			pos_phase = arg(psi);
+			]]>
+		</sampling_group>
+
+        <sampling_group basis="nx" initial_sample="yes">
+          <moments> herm_dens herm_phase </moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            herm_dens = mod2(psi);
+			herm_phase = arg(psi);
+          ]]>
+		</sampling_group>
+	
+		<sampling_group basis="kx" initial_sample="yes">
+			<moments> mom_dens mom_phase </moments>
+			<dependencies> wavefunction </dependencies>
+			<![CDATA[
+			mom_dens = mod2(psi);
+			mom_phase = arg(psi);
+			]]>
+		</sampling_group>
+	</output>
+</simulation>
+
+

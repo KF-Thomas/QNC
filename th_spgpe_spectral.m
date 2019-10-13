@@ -1,0 +1,39 @@
+try
+  t_1 = hdf5read('th_spgpe_spectral.h5', '/1/t');
+  x_1 = hdf5read('th_spgpe_spectral.h5', '/1/x');
+  pos_dens_1 = hdf5read('th_spgpe_spectral.h5', '/1/pos_dens');
+  pos_dens_1 = permute(pos_dens_1, ndims(pos_dens_1):-1:1);
+  pos_phase_1 = hdf5read('th_spgpe_spectral.h5', '/1/pos_phase');
+  pos_phase_1 = permute(pos_phase_1, ndims(pos_phase_1):-1:1);
+  t_2 = hdf5read('th_spgpe_spectral.h5', '/2/t');
+  nx_2 = hdf5read('th_spgpe_spectral.h5', '/2/nx');
+  herm_dens_2 = hdf5read('th_spgpe_spectral.h5', '/2/herm_dens');
+  herm_dens_2 = permute(herm_dens_2, ndims(herm_dens_2):-1:1);
+  herm_phase_2 = hdf5read('th_spgpe_spectral.h5', '/2/herm_phase');
+  herm_phase_2 = permute(herm_phase_2, ndims(herm_phase_2):-1:1);
+  t_3 = hdf5read('th_spgpe_spectral.h5', '/3/t');
+  kx_3 = hdf5read('th_spgpe_spectral.h5', '/3/kx');
+  mom_dens_3 = hdf5read('th_spgpe_spectral.h5', '/3/mom_dens');
+  mom_dens_3 = permute(mom_dens_3, ndims(mom_dens_3):-1:1);
+  mom_phase_3 = hdf5read('th_spgpe_spectral.h5', '/3/mom_phase');
+  mom_phase_3 = permute(mom_phase_3, ndims(mom_phase_3):-1:1);
+catch
+  t_1 = hdf5read('th_spgpe_spectral.h5', '/1/t');
+  x_1 = hdf5read('th_spgpe_spectral.h5', '/1/x');
+  pos_dens_1 = hdf5read('th_spgpe_spectral.h5', '/1/mean_pos_dens');
+  pos_dens_1 = permute(pos_dens_1, ndims(pos_dens_1):-1:1);
+  pos_phase_1 = hdf5read('th_spgpe_spectral.h5', '/1/mean_pos_phase');
+  pos_phase_1 = permute(pos_phase_1, ndims(pos_phase_1):-1:1);
+  t_2 = hdf5read('th_spgpe_spectral.h5', '/2/t');
+  nx_2 = hdf5read('th_spgpe_spectral.h5', '/2/nx');
+  herm_dens_2 = hdf5read('th_spgpe_spectral.h5', '/2/mean_herm_dens');
+  herm_dens_2 = permute(herm_dens_2, ndims(herm_dens_2):-1:1);
+  herm_phase_2 = hdf5read('th_spgpe_spectral.h5', '/2/mean_herm_phase');
+  herm_phase_2 = permute(herm_phase_2, ndims(herm_phase_2):-1:1);
+  t_3 = hdf5read('th_spgpe_spectral.h5', '/3/t');
+  kx_3 = hdf5read('th_spgpe_spectral.h5', '/3/kx');
+  mom_dens_3 = hdf5read('th_spgpe_spectral.h5', '/3/mean_mom_dens');
+  mom_dens_3 = permute(mom_dens_3, ndims(mom_dens_3):-1:1);
+  mom_phase_3 = hdf5read('th_spgpe_spectral.h5', '/3/mean_mom_phase');
+  mom_phase_3 = permute(mom_phase_3, ndims(mom_phase_3):-1:1);  
+end
