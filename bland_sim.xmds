@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simulation xmds-version="2">
+	<name>th_spgpe_spectral</name>
+	<author>Kieran Thomas</author>
+	<description>
+		
+	</description>
+
+	<features>
+		<auto_vectorise />
+		<benchmark />
+		<bing />
+		<halt_non_finite />
+		<validation kind="run-time"/>
+		<globals>
+			<![CDATA[	
+			real t_lim;
+			const real omega 1.0;		
+			const int Nx_modes =  25;
+			const int Nx_lat = 2*Nx_modes+1;
+			]]>
+		</globals>
+		<arguments>
+			<![CDATA[		
+			t_lim = tl*2*M_PI/omega;		
+			]]>
+		</arguments>
+	</features>
+
+	<geometry>
+		<propagation_dimension> t </propagation_dimension>
+		<transverse_dimensions>
+			<dimension name="x"  lattice="Nx_lat" spectral_lattice="Nx_modes"  length_scale="1.0" transform="hermite-gauss" />
+		</transverse_dimensions>
+	</geometry>
+	
+	<noise_vector name="driving_noise" dimensions="x" initial_basis="nx" kind="uniform" type="complex" method="dsfmt">
+		<components> xeta yeta </components>
+	</noise_vector>
+
+	<vector name="wavefunction" initial_basis="nx" type="complex">
+		<components> psi </components>
+		<dependencies>driving_noise</dependencies>
+		<initialisation>
+		      <![CDATA[
+		        psi = (2*xeta-1)*exp(2*M_PI*i*yeta);
+		      ]]>
+		</initialisation>
+	</vector>
+	
+    <computed_vector name="pos_space_terms" dimensions="x" type="complex">
+      <components>
+		  U
+      </components>
+      <evaluation>
+        <dependencies basis="x_4f">wavefunction</dependencies>
+        <![CDATA[
+          U = mod2(psi)*psi;
+        ]]>
+      </evaluation>
+    </computed_vector>
+
+	<sequence>
+		<integrate algorithm="ARK89" tolerance="1.0e-4" interval="t_lim">
+			<samples> 150 150 </samples>
+			<operators>
+				<operator kind="ip" type="imaginary">
+					<operator_names> L </operator_names>
+					<![CDATA[
+					L = - (nx + 0.5)*omega*i;
+					]]>
+				</operator>
+				<integration_vectors> wavefunction </integration_vectors >
+				<dependencies> pos_space_terms </dependencies >
+				<![CDATA[
+				dpsi_dt = (L[psi]-i*U);
+				]]>
+			</operators>
+		</integrate>
+	</sequence>
+  
+	<output>
+		<sampling_group basis="x" initial_sample="yes">
+			<moments> pos_dens pos_phase </moments>
+			<dependencies>wavefunction</dependencies>
+			<![CDATA[
+			pos_dens = mod2(psi);
+			pos_phase = arg(psi);
+			]]>
+		</sampling_group>
+		
+        <sampling_group basis="nx" initial_sample="yes">
+          <moments> herm_dens </moments>
+          <dependencies>wavefunction</dependencies>
+          <![CDATA[
+            herm_dens = mod2(psi);
+			herm_phase = arg(psi);
+          ]]>
+		</sampling_group>
+	
+		<sampling_group basis="kx" initial_sample="yes">
+			<moments> mom_dens mom_phase </moments>
+			<dependencies> wavefunction </dependencies>
+			<![CDATA[
+			mom_dens = mod2(psi);
+			mom_phase = arg(psi);
+			]]>
+		</sampling_group>
+	</output>
+</simulation>
+
